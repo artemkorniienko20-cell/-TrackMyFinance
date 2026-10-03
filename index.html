@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrackMyFinance — Розумний трекер витрат та фінансів</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+</head>
+<body>
+
+  <!-- ==========================================
+       HEADER & NAVIGATION
+       ========================================== -->
+  <header class="header">
+    <div class="header-container">
+      <a href="#" class="logo">
+        <div class="logo-icon" id="headerLogoIcon"></div>
+        <div class="logo-text">Track<span>MyFinance</span></div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Switch Interface (Theme) Button -->
+        <button class="btn-toggle-tool" id="btnToggleTheme" title="Перемкнути інтерфейс (Світлий / Темний)">
+          <span id="themeBtnIcon">☀️</span>
+          <span id="themeBtnText">Світлий</span>
+        </button>
+
+        <!-- Switch App Icon Button -->
+        <button class="btn-toggle-tool" id="btnToggleIcon" title="Перемкнути іконку сайту (Щит / Діамант)">
+          <span>🎨</span>
+          <span id="iconBtnText">Іконка 2</span>
+        </button>
+
+        <!-- User Status & Quick Profile Pill -->
+        <div class="user-status-pill" id="headerUserPill" title="Відкрити налаштування профілю">
+          <div class="header-avatar-wrapper">
+            <div class="avatar-container frame-none" id="headerFrameBox">
+              <div class="avatar-image-box" id="headerAvatarBox"></div>
+            </div>
+          </div>
+          <span class="header-badge badge-free" id="headerBadge">
+            <span id="headerBadgeText">Базовий</span>
+          </span>
+        </div>
+
+        <button class="btn-premium-cta" id="btnTopPremium">
+          <span>⭐</span> <span>Підписки</span>
+        </button>
+
+        <button class="btn-menu" id="btnOpenMenu" aria-label="Відкрити меню">
+          <span>☰</span> <span>Меню</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       SIDE NAVIGATION DRAWER (КНОПКА МЕНЮ)
+       ========================================== -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="side-drawer" id="menuDrawer">
+    <div class="drawer-header">
+      <div class="logo" style="font-size: 1.15rem;">
+        <div class="logo-icon" id="drawerLogoIcon" style="width: 34px; height: 34px;"></div>
+        <div>Track<span>MyFinance</span></div>
+      </div>
+      <button class="modal-close" id="btnCloseDrawer">&times;</button>
+    </div>
+
+    <nav class="drawer-nav">
+      <button class="drawer-link" id="drawerLinkHome">
+        <span class="drawer-link-icon">📊</span>
+        <span>Огляд фінансів</span>
+      </button>
+      <button class="drawer-link" id="drawerLinkPlans">
+        <span class="drawer-link-icon">⭐</span>
+        <span>Тарифи та підписки</span>
+      </button>
+      <button class="drawer-link" id="drawerLinkProfile">
+        <span class="drawer-link-icon">👤</span>
+        <span>Мій профіль та VIP-рамки</span>
+      </button>
+      <button class="drawer-link" id="drawerLinkTheme">
+        <span class="drawer-link-icon" id="drawerThemeIcon">☀️</span>
+        <span id="drawerThemeText">Змінити інтерфейс на Світлий</span>
+      </button>
+      <button class="drawer-link" id="drawerLinkIcon">
+        <span class="drawer-link-icon">🎨</span>
+        <span id="drawerIconText">Перемкнути на Іконку 2</span>
+      </button>
+      <button class="drawer-link" id="drawerLinkReset">
+        <span class="drawer-link-icon">🔄</span>
+        <span>Скинути дані / Тестовий режим</span>
+      </button>
+    </nav>
+
+    <div class="drawer-footer">
+      <p><strong>TrackMyFinance</strong> v1.0</p>
+      <p>Всі права захищено © 2026</p>
+    </div>
+  </aside>
+
+  <!-- ==========================================
+       MAIN DASHBOARD
+       ========================================== -->
+  <main class="main-content">
+    
+    <!-- Hero Statistics Grid -->
+    <section class="stats-grid">
+      <div class="stat-card card-balance">
+        <div class="stat-header">
+          <span>Загальний баланс</span>
+          <div class="stat-icon icon-balance">💳</div>
+        </div>
+        <div class="stat-value text-green" id="totalBalance">0 ₴</div>
+        <div class="stat-subtext">Поточні накопичення та залишок</div>
+      </div>
+
+      <div class="stat-card card-income">
+        <div class="stat-header">
+          <span>Доходи за місяць</span>
+          <div class="stat-icon icon-income">📈</div>
+        </div>
+        <div class="stat-value text-green" id="totalIncome">+0 ₴</div>
+        <div class="stat-subtext">Зарплата, фріланс, перекази</div>
+      </div>
+
+      <div class="stat-card card-expense">
+        <div class="stat-header">
+          <span>Витрати за місяць</span>
+          <div class="stat-icon icon-expense">📉</div>
+        </div>
+        <div class="stat-value text-red" id="totalExpense">-0 ₴</div>
+        <div class="stat-subtext">Покупки, рахунки, транспорт</div>
+      </div>
+
+      <div class="stat-card card-premium-promo" style="cursor: pointer;" onclick="app.openSubscriptionModal()">
+        <div class="stat-header">
+          <span>Статус підписки</span>
+          <div class="stat-icon icon-vip">👑</div>
+        </div>
+        <div class="stat-value" style="font-size: 1.55rem; color: #fbbf24;">FinanseDelux</div>
+        <div class="stat-subtext">Відкрийте 5 VIP-рамок за 100 ₴ →</div>
+      </div>
+    </section>
+
+    <!-- Quick Action Banner -->
+    <div class="action-banner">
+      <div class="action-banner-text">
+        <h3>Особистий фінансовий трекер TrackMyFinance</h3>
+        <p>Аналізуйте витрати, контролюйте бюджет та персоналізуйте свій профіль VIP-аксесуарами</p>
+      </div>
+      <div class="banner-buttons">
+        <button class="btn-primary" id="btnBannerAdd">
+          <span>+</span> <span>Додати операцію (Вікно)</span>
+        </button>
+        <button class="btn-secondary" onclick="app.openSubscriptionModal()">
+          <span>⭐</span> <span>Підписки</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Inline Add Transaction Widget -->
+    <section class="inline-add-card">
+      <div class="inline-add-header">
+        <div class="inline-type-toggle">
+          <button type="button" class="type-pill expense active" id="quickTypeExpense">🔴 Витрата</button>
+          <button type="button" class="type-pill income" id="quickTypeIncome">🟢 Дохід</button>
+        </div>
+        <span class="inline-add-hint">⚡ Швидке додавання операції в 1 клік</span>
+      </div>
+      <div class="inline-add-grid">
+        <div class="input-with-symbol">
+          <input type="text" id="quickAmount" placeholder="Сума (напр. 350)" inputmode="decimal">
+          <span class="currency-sym">₴</span>
+        </div>
+        <select id="quickCategory" class="inline-select">
+          <option value="Продукти">🛒 Продукти</option>
+          <option value="Транспорт">🚗 Транспорт</option>
+          <option value="Кафе та ресторани">☕ Кафе та ресторани</option>
+          <option value="Комунальні">🏠 Комунальні</option>
+          <option value="Розваги">🎮 Розваги</option>
+          <option value="Покупки">🛍️ Покупки</option>
+          <option value="Здоровʼя">💊 Здоровʼя</option>
+          <option value="Зарплата">💰 Зарплата</option>
+          <option value="Фріланс">💻 Фріланс</option>
+          <option value="Інше">📦 Інше</option>
+        </select>
+        <input type="text" id="quickNote" placeholder="Коментар (напр. Супермаркет Silpo)" class="inline-input">
+        <button type="button" class="btn-primary" id="btnQuickAdd">
+          <span>➕</span> <span>Додати операцію</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main 2-Column Section -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Transactions List -->
+      <section class="card-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span>📝</span> Історія операцій
+          </h2>
+          <button class="btn-primary" id="btnOpenAddTx" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
+            + Додати
+          </button>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="filters-row">
+          <button class="filter-btn active" data-filter="all">Всі операції</button>
+          <button class="filter-btn" data-filter="expense">Тільки витрати</button>
+          <button class="filter-btn" data-filter="income">Тільки доходи</button>
+        </div>
+
+        <!-- Transactions Scroll List -->
+        <div class="transactions-container" id="transactionsList">
+          <!-- Dynamic rendering from app.js -->
+        </div>
+      </section>
+
+      <!-- Right Column: Analytics & Doughnut Chart -->
+      <section class="card-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span>📊</span> Аналітика витрат
+          </h2>
+        </div>
+
+        <div class="chart-wrapper">
+          <canvas id="categoryChartCanvas"></canvas>
+          <div class="chart-center-text">
+            <div class="chart-center-amount" id="chartCenterAmount">0 ₴</div>
+            <div class="chart-center-label">Всього витрат</div>
+          </div>
+        </div>
+
+        <div class="category-legend" id="categoryLegend">
+          <!-- Dynamic Legend rendering from app.js -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==========================================
+       MODAL 1: SUBSCRIPTIONS (ПІДПИСКИ ТА ТАРИФИ)
+       ========================================== -->
+  <div class="modal-overlay" id="subscriptionModal">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>⭐</span> Оберіть свій преміум тариф
+        </h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; text-align: center;">
+          Отримайте ексклюзивні авторські VIP-аватарки та розкішні анімовані рамки для профілю!
+        </p>
+
+        <div class="pricing-grid">
+          
+          <!-- Plan 1: FinansePremium (40 ₴) -->
+          <div class="pricing-card premium-card">
+            <div class="pricing-card-header">
+              <span style="font-size: 1.8rem;">⭐</span>
+              <h3>FinansePremium</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Для цілеспрямованих інвесторів</p>
+            </div>
+
+            <div class="pricing-price">
+              <span class="price-num">40</span>
+              <span class="price-currency">₴</span>
+              <span class="price-period">/ міс</span>
+            </div>
+
+            <ul class="pricing-features">
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>6 ексклюзивних VIP-аватарок</strong> (Золотий Лев, Кібер-Кіт, Діамантовий Магнат, Неоновий Фенікс тощо)</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Преміальний статус та золотий значок ⭐ <strong>FinansePremium</strong></span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Необмежене додавання операцій та категорій</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Миттєва активація після оплати</span>
+              </li>
+            </ul>
+
+            <div class="pricing-card-footer">
+              <button class="btn-buy-premium" id="btnBuyPremium">Купити за 40 ₴</button>
+            </div>
+          </div>
+
+          <!-- Plan 2: FinanseDelux (100 ₴) -->
+          <div class="pricing-card delux-card">
+            <div class="pricing-badge-popular">Топ Вибір</div>
+
+            <div class="pricing-card-header">
+              <span style="font-size: 1.8rem;">👑</span>
+              <h3>FinanseDelux</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Максимальний статус та розкіш</p>
+            </div>
+
+            <div class="pricing-price">
+              <span class="price-num">100</span>
+              <span class="price-currency">₴</span>
+              <span class="price-period">/ міс</span>
+            </div>
+
+            <ul class="pricing-features">
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>Усі можливості та VIP-аватарки</strong> тарифу FinansePremium</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>5 анімованих VIP-рамок:</strong><br>
+                  • Золоте сяйво (Royal Gold)<br>
+                  • Кібер Неон (Cyberpunk Pulse)<br>
+                  • Діамант (Diamond Shimmer)<br>
+                  • Вогняна Аура (Flame Aura)<br>
+                  • Космічна Галактика (Cosmic Nebula)
+                </span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Ексклюзивний анімований бейдж <strong>👑 FinanseDelux</strong></span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Пріоритетна підтримка 24/7</span>
+              </li>
+            </ul>
+
+            <div class="pricing-card-footer">
+              <button class="btn-buy-delux" id="btnBuyDelux">Купити за 100 ₴</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: CHECKOUT (МЕНЮ ОПЛАТИ ТА ПІДТВЕРДЖЕННЯ)
+       ========================================== -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="checkoutTitle">
+          <span>💳</span> Оформлення підписки
+        </h3>
+        <button class="modal-close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Summary Box -->
+        <div class="checkout-summary">
+          <div class="checkout-plan-info">
+            <h4 id="successPlanName">FinansePremium</h4>
+            <p id="checkoutDesc">VIP-аватарки та преміум статус</p>
+          </div>
+          <div class="checkout-total-price" id="checkoutPrice">40 ₴</div>
+        </div>
+
+        <!-- Payment Method Tabs -->
+        <div class="payment-methods-tabs">
+          <div class="payment-tab active" data-method="card">
+            <span>💳</span>
+            <span>Банківська картка</span>
+          </div>
+          <div class="payment-tab" data-method="applepay">
+            <span>🍏</span>
+            <span>Apple / Google Pay</span>
+          </div>
+          <div class="payment-tab" data-method="mono">
+            <span>🐱</span>
+            <span>Monobank / QR</span>
+          </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <form id="checkoutForm">
+          
+          <button type="button" class="btn-demo-fill" id="btnFillDemoCard">
+            ⚡ Заповнити тестовими реквізитами картки
+          </button>
+
+          <div class="form-group">
+            <label for="cardNumber">Номер банківської картки</label>
+            <input type="text" id="cardNumber" class="form-input" placeholder="0000 0000 0000 0000" maxlength="19" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cardExpiry">Термін (MM/YY)</label>
+              <input type="text" id="cardExpiry" class="form-input" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div class="form-group">
+              <label for="cardCvv">CVV / CVC</label>
+              <input type="password" id="cardCvv" class="form-input" placeholder="•••" maxlength="3" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cardHolder">Власник картки</label>
+            <input type="text" id="cardHolder" class="form-input" placeholder="IVAN PETRENKO" required>
+          </div>
+
+          <button type="submit" class="btn-confirm-pay" id="btnConfirmPay">
+            <span>🔒</span> <span id="checkoutBtnText">Підтвердити оплату</span>
+          </button>
+
+          <p style="font-size: 0.76rem; color: var(--text-dim); text-align: center; margin-top: 0.85rem;">
+            🛡️ Безпечний платіжний шлюз з шифруванням 256-bit SSL.
+          </p>
+        </form>
+
+        <!-- Loader State -->
+        <div class="pay-loader" id="checkoutLoader">
+          <div class="pay-spinner"></div>
+          <h4>Обробка платежу...</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.4rem;">
+            З'єднання з банком та підтвердження транзакції...
+          </p>
+        </div>
+
+        <!-- Success State -->
+        <div class="pay-success" id="checkoutSuccess">
+          <div class="pay-success-icon">✓</div>
+          <h3 style="font-size: 1.4rem; color: #fff; margin-bottom: 0.4rem;">Оплату успішно підтверджено!</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Вітаємо! Ваш статус оновлено, а всі VIP-аватарки та рамки вже доступні для вибору.
+          </p>
+          <button class="btn-primary" id="btnSuccessToProfile" style="width: 100%; justify-content: center;">
+            <span>🎨</span> <span>Перейти до налаштування аватара та рамок</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 3: PROFILE (ПРОФІЛЬ ТА VIP РАМКИ)
+       ========================================== -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>👤</span> Профіль та кастомізація
+        </h3>
+        <button class="modal-close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Large Avatar Preview -->
+        <div class="profile-hero">
+          <div class="avatar-container profile-avatar-large frame-none" id="profileFrameContainer">
+            <div class="avatar-image-box" id="profilePreviewBox"></div>
+          </div>
+          <div class="profile-name">Фінансовий Лідер</div>
+          <span class="header-badge badge-premium" id="profileTierBadge">FinanseDelux</span>
+
+
+          <!-- Dynamic VIP prompt banner -->
+          <div id="profileVipBanner" style="display: none;"></div>
+        </div>
+
+        <!-- Avatar Selection -->
+        <div class="customization-section">
+          <div class="customization-header">
+            <div class="customization-title">
+              <span>🎭</span> Оберіть аватарку
+            </div>
+            <span class="vip-badge-tag vip-badge-gold">VIP FinansePremium</span>
+          </div>
+          <div class="avatar-selection-grid" id="avatarSelectionGrid">
+            <!-- Dynamic Avatars from app.js -->
+          </div>
+        </div>
+
+        <!-- Frame Selection -->
+        <div class="customization-section">
+          <div class="customization-header">
+            <div class="customization-title">
+              <span>🖼️</span> 5 VIP-Рамок
+            </div>
+            <span class="vip-badge-tag vip-badge-delux">Ексклюзив FinanseDelux</span>
+          </div>
+          <div class="frame-selection-grid" id="frameSelectionGrid">
+            <!-- Dynamic 5 Frames from app.js -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 4: ADD TRANSACTION
+       ========================================== -->
+  <div class="modal-overlay" id="txModal">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>➕</span> Нова операція
+        </h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addTxForm">
+          <div class="form-group">
+            <label for="txType">Тип операції</label>
+            <select id="txType" class="form-input">
+              <option value="expense">Витрата (-)</option>
+              <option value="income">Дохід (+)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="txAmount">Сума (₴)</label>
+            <input type="text" id="txAmount" class="form-input" placeholder="наприклад, 450 або 450,50" inputmode="decimal" required>
+          </div>
+
+          <div class="form-group">
+            <label for="txCategory">Категорія</label>
+            <select id="txCategory" class="form-input">
+              <option value="Продукти">🛒 Продукти</option>
+              <option value="Транспорт">🚗 Транспорт</option>
+              <option value="Кафе та ресторани">☕ Кафе та ресторани</option>
+              <option value="Комунальні">🏠 Комунальні</option>
+              <option value="Розваги">🎮 Розваги</option>
+              <option value="Покупки">🛍️ Покупки</option>
+              <option value="Здоровʼя">💊 Здоровʼя</option>
+              <option value="Зарплата">💰 Зарплата</option>
+              <option value="Фріланс">💻 Фріланс</option>
+              <option value="Інше">📦 Інше</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="txNote">Коментар або опис</label>
+            <input type="text" id="txNote" class="form-input" placeholder="наприклад, Супермаркет або Таксі">
+          </div>
+
+          <div class="form-group">
+            <label for="txDate">Дата</label>
+            <input type="date" id="txDate" class="form-input">
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+            <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">
+              <span>➕</span> <span>Додати операцію</span>
+            </button>
+            <button type="button" class="btn-secondary" onclick="app.closeModal(document.getElementById('txModal'))" style="padding: 0 1.25rem;">
+              Скасувати
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✨</span>
+    <span id="toastMessage">Операція виконана</span>
+  </div>
+
+  <!-- Confetti Container for Celebrations -->
+  <div class="confetti-container" id="confettiContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
