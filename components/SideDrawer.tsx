@@ -18,6 +18,7 @@ export const SideDrawer: React.FC = () => {
     setIsDrawerOpen,
     setIsSubModalOpen,
     setIsProfileModalOpen,
+    setIsIosInstallOpen,
     toggleTheme,
     toggleIconVariant,
     resetData,
@@ -214,6 +215,25 @@ export const SideDrawer: React.FC = () => {
                 </span>
               )}
             </span>
+          </button>
+
+          <button
+            type="button"
+            className="drawer-link"
+            onClick={() => {
+              setIsDrawerOpen(false);
+              setIsIosInstallOpen(true);
+            }}
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1))',
+              border: '1px dashed rgba(59, 130, 246, 0.35)',
+              borderRadius: '10px',
+              margin: '0.4rem 0',
+              padding: '0.65rem 0.85rem'
+            }}
+          >
+            <span className="drawer-link-icon">📲</span>
+            <span style={{ fontWeight: 600, color: '#93c5fd' }}>Встановити на iPhone</span>
           </button>
 
           {/* Language Switchers in Drawer */}

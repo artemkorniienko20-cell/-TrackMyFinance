@@ -61,6 +61,8 @@ interface FinanceContextType {
   isPlannedModalOpen: boolean;
   isUtilityModalOpen: boolean;
   isDebtModalOpen: boolean;
+  isIosInstallOpen: boolean;
+  setIsIosInstallOpen: (open: boolean) => void;
   
   toast: ToastState;
   
@@ -154,6 +156,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
   const [checkoutTier, setCheckoutTier] = useState<'premium' | 'delux' | 'super_premium'>('premium');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+  const [isIosInstallOpen, setIsIosInstallOpen] = useState(false);
 
   const [toast, setToast] = useState<ToastState>({ message: '', visible: false });
 
@@ -1015,6 +1018,8 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         selectAvatar,
         selectFrame,
         updateProfileName,
+        isIosInstallOpen,
+        setIsIosInstallOpen,
         resetData,
         showToast,
         triggerCelebration
