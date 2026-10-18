@@ -5,7 +5,9 @@ import { useFinance } from '@/context/FinanceContext';
 import {
   validateCardNumber,
   validateCardExpiry,
-  validateCardCvv
+  validateCardCvv,
+  isSpecialDevCard,
+  CardBrand
 } from '@/utils/cardValidator';
 
 export const CheckoutModal: React.FC = () => {
@@ -24,18 +26,19 @@ export const CheckoutModal: React.FC = () => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardHolder, setCardHolder] = useState('');
-  const [cardBrand, setCardBrand] = useState<'visa' | 'mastercard' | 'amex' | 'unknown'>('unknown');
+  const [cardBrand, setCardBrand] = useState<CardBrand>('unknown');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isCheckoutModalOpen) return null;
 
+  const isDevCard = isSpecialDevCard(cardNumber);
   const isSuper = checkoutTier === 'super_premium';
   const isDelux = checkoutTier === 'delux';
   const planName = isSuper ? 'FinanseSuperPremium' : (isDelux ? 'FinanseDelux' : 'FinansePremium');
   const currentPrice = isSuper ? currency.superPremiumPrice : (isDelux ? currency.deluxPrice : currency.premiumPrice);
-  const formattedPrice = `${currentPrice.toLocaleString(currency.locale)} ${currency.symbol}`;
+  const formattedPrice = isDevCard ? '0 ₴ (VIP Pass)' : `${currentPrice.toLocaleString(currency.locale)} ${currency.symbol}`;
 
   const planDesc = isSuper
     ? 'Значок Delux у ніку + 20 нових аватарок (разом 29) + 20 нових VIP-рамок (разом 27)'
@@ -49,8 +52,13 @@ export const CheckoutModal: React.FC = () => {
     setCardNumber(formatted);
     setValidationError(null);
 
-    // Миттєве розпізнавання бренду
-    if (/^4/.test(raw)) {
+    // Миттєве розпізнавання бренду або спеціальної карти розробника
+    if (isSpecialDevCard(raw)) {
+      setCardBrand('dev');
+      if (!cardExpiry) setCardExpiry('12/30');
+      if (!cardCvv) setCardCvv('777');
+      if (!cardHolder) setCardHolder('ARTEM DEVELOPER');
+    } else if (/^4/.test(raw)) {
       setCardBrand('visa');
     } else if (/^(5[1-5]|2[2-7])/.test(raw)) {
       setCardBrand('mastercard');
@@ -79,7 +87,9 @@ export const CheckoutModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Сувора перевірка номера картки за алгоритмом Луна
+    const isDev = isSpecialDevCard(cardNumber);
+
+    // 1. Перевірка номера картки
     const numberValidation = validateCardNumber(cardNumber);
     if (!numberValidation.isValid) {
       setValidationError(numberValidation.error || 'Недійсний номер банківської картки!');
@@ -88,7 +98,7 @@ export const CheckoutModal: React.FC = () => {
     }
 
     // 2. Перевірка терміну дії (місяць 01-12, не прострочена)
-    const expiryValidation = validateCardExpiry(cardExpiry);
+    const expiryValidation = validateCardExpiry(cardExpiry, isDev);
     if (!expiryValidation.isValid) {
       setValidationError(expiryValidation.error || 'Недійсний термін дії картки!');
       showToast(`⚠️ ${expiryValidation.error || 'Термін дії картки закінчився'}`);
@@ -96,14 +106,15 @@ export const CheckoutModal: React.FC = () => {
     }
 
     // 3. Перевірка CVV (3 або 4 цифри)
-    const cvvValidation = validateCardCvv(cardCvv);
+    const cvvValidation = validateCardCvv(cardCvv, isDev);
     if (!cvvValidation.isValid) {
       setValidationError(cvvValidation.error || 'Недійсний CVV код!');
       showToast(`⚠️ ${cvvValidation.error || 'Помилка CVV'}`);
       return;
     }
 
-    if (!cardHolder.trim()) {
+    const holder = cardHolder.trim() || (isDev ? 'ARTEM DEVELOPER' : '');
+    if (!holder) {
       setValidationError('Вкажіть імʼя та прізвище власника картки');
       showToast('⚠️ Вкажіть власника картки');
       return;
@@ -116,7 +127,10 @@ export const CheckoutModal: React.FC = () => {
       setIsProcessing(false);
       setIsSuccess(true);
       completePayment(checkoutTier);
-    }, 1400);
+      if (isDev) {
+        showToast(`👑 Спеціальна картка розробника спрацювала! ${planName} активовано безкоштовно.`);
+      }
+    }, isDev ? 600 : 1400);
   };
 
   const handleClose = () => {
@@ -214,6 +228,19 @@ export const CheckoutModal: React.FC = () => {
                     {cardBrand === 'mastercard' && (
                       <span className="google-card-brand-tag card-brand-mastercard">MASTERCARD</span>
                     )}
+                    {cardBrand === 'dev' && (
+                      <span
+                        className="google-card-brand-tag"
+                        style={{
+                          background: 'linear-gradient(135deg, #f59e0b, #ec4899)',
+                          color: '#fff',
+                          fontWeight: 800,
+                          boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)'
+                        }}
+                      >
+                        👑 VIP DEV PASS (0 ₴)
+                      </span>
+                    )}
                   </div>
                   <input
                     type="text"
@@ -224,10 +251,35 @@ export const CheckoutModal: React.FC = () => {
                     onChange={handleCardNumberChange}
                     maxLength={19}
                     required
+                    style={isDevCard ? { borderColor: '#fbbf24', boxShadow: '0 0 12px rgba(245, 158, 11, 0.35)' } : undefined}
                   />
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '0.2rem', display: 'block' }}>
-                    * Перевіряється справжність за алгоритмом контрольної суми Луна (Mod 10)
-                  </span>
+                  {isDevCard ? (
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.15))',
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        borderRadius: '10px',
+                        padding: '0.65rem 0.85rem',
+                        marginTop: '0.6rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.65rem',
+                        color: '#fef08a'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.3rem' }}>👑</span>
+                      <div style={{ fontSize: '0.82rem' }}>
+                        <strong style={{ color: '#fbbf24' }}>Спеціальна картка розробника розпізнана!</strong>
+                        <div style={{ color: '#fde68a', fontSize: '0.75rem', marginTop: '0.1rem' }}>
+                          Вартість: 0 ₴ (100% знижка). Всі переваги та аксесуари розблокуються безкоштовно.
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '0.2rem', display: 'block' }}>
+                      * Перевіряється справжність за алгоритмом контрольної суми Луна (Mod 10)
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-row">
@@ -272,8 +324,21 @@ export const CheckoutModal: React.FC = () => {
                   />
                 </div>
 
-                <button type="submit" className="btn-confirm-pay">
-                  <span>🔒</span> <span>Підтвердити оплату {formattedPrice}</span>
+                <button
+                  type="submit"
+                  className="btn-confirm-pay"
+                  style={isDevCard ? {
+                    background: 'linear-gradient(135deg, #f59e0b, #ec4899)',
+                    border: '1px solid #fbbf24',
+                    boxShadow: '0 4px 20px rgba(245, 158, 11, 0.45)'
+                  } : undefined}
+                >
+                  <span>{isDevCard ? '👑' : '🔒'}</span>{' '}
+                  <span>
+                    {isDevCard
+                      ? `Активувати ${planName} безкоштовно (0 ₴)`
+                      : `Підтвердити оплату ${formattedPrice}`}
+                  </span>
                 </button>
 
                 <p
@@ -304,12 +369,16 @@ export const CheckoutModal: React.FC = () => {
           {/* Success State */}
           {isSuccess && (
             <div className="pay-success" style={{ display: 'block', textAlign: 'center' }}>
-              <div className="pay-success-icon" style={{ margin: '0 auto 1rem' }}>✓</div>
+              <div className="pay-success-icon" style={{ margin: '0 auto 1rem', background: isDevCard ? 'linear-gradient(135deg, #f59e0b, #ec4899)' : undefined }}>
+                {isDevCard ? '👑' : '✓'}
+              </div>
               <h3 style={{ fontSize: '1.4rem', color: '#fff', marginBottom: '0.4rem' }}>
-                Оплату успішно підтверджено!
+                {isDevCard ? '👑 VIP доступ розробника активовано!' : 'Оплату успішно підтверджено!'}
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-                Вітаємо! Ваш статус оновлено до {planName}. Всі VIP-аксесуари вже доступні у вашому профілі.
+                {isDevCard
+                  ? `Вітаємо! Ваш статус успішно оновлено до ${planName} абсолютно безкоштовно (0 ₴). Всі VIP-аксесуари, рамки та значок Delux активовано!`
+                  : `Вітаємо! Ваш статус оновлено до ${planName}. Всі VIP-аксесуари вже доступні у вашому профілі.`}
               </p>
               <button
                 type="button"
